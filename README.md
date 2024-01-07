@@ -2,7 +2,7 @@
 
 ## Описание проекта
 **Это бот который может переносить стиль с одной фотографии на другую.**
-![Пример работы.](https://drive.google.com/telebot/blob/main/image_readme_tgbot.PNG)
+![Пример работы.](![Image alt](https://github.com/{username}/{repository}/raw/{branch}/{path}/image.png))
 
 
 ## Запуск проекта
