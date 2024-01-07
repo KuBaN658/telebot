@@ -1,2 +1,5 @@
 telebot_project/.idea
 telebot_project/.venv
+telebot_project/.env
+telebot_project/.env.example
+.ipynb_checkpoints
