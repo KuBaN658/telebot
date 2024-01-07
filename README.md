@@ -2,7 +2,7 @@
 
 ## Описание проекта
 **Это бот который может переносить стиль с одной фотографии на другую.**
-![Пример работы.]([https://www.example.com/image.jpg](https://drive.google.com/open?id=13RB9aGRD8S3PkN08UW1bkPmxcCmZTFzh&usp=drive_fs))
+![Пример работы.](https://drive.google.com/file/d/13RB9aGRD8S3PkN08UW1bkPmxcCmZTFzh/view)
 
 
 ## Запуск проекта
