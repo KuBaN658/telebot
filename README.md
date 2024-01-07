@@ -2,7 +2,7 @@
 
 ## Описание проекта
 **Это бот который может переносить стиль с одной фотографии на другую.**
-![Пример работы.](![Image alt](https://github.com/KuBaN658/telebot/blob/main/image_readme_tgbot.PNG)
+![Пример работы.](https://github.com/KuBaN658/telebot/blob/main/image_readme_tgbot.PNG)
 
 
 ## Запуск проекта
