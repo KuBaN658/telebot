@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
 from PIL import Image
 import torchvision.transforms as transforms
 import torch.optim as optim
@@ -12,7 +13,7 @@ warnings.filterwarnings('ignore')
 
 class ContentLoss(nn.Module):
 
-    def __init__(self, target):
+    def __init__(self, target: torch.tensor):
         super(ContentLoss, self).__init__()
         self.target = target.detach()
 
@@ -23,27 +24,20 @@ class ContentLoss(nn.Module):
 
 class StyleLoss(nn.Module):
 
-    def __init__(self, target_feature):
+    def __init__(self, target_feature: torch.tensor):
         super(StyleLoss, self).__init__()
         self.target = self.gram_matrix(target_feature).detach()
 
-    def forward(self, input):
+    def forward(self, input: torch.tensor) -> torch.tensor:
         G = self.gram_matrix(input)
         self.loss = F.mse_loss(G, self.target)
         return input
 
     @staticmethod
-    def gram_matrix(input):
-        a, b, c, d = input.size()  # a=batch size(=1)
-        # b=number of feature maps
-        # (c,d)=dimensions of a f. map (N=c*d)
-
-        features = input.view(a * b, c * d)  # resise F_XL into \hat F_XL
-
-        G = torch.mm(features, features.t())  # compute the gram product
-
-        # we 'normalize' the values of the gram matrix
-        # by dividing by the number of element in each feature maps.
+    def gram_matrix(input: torch.tensor) -> torch.tensor:
+        a, b, c, d = input.size()
+        features = input.view(a * b, c * d)
+        G = torch.mm(features, features.t())
         return G.div(a * b * c * d)
 
 
@@ -56,18 +50,18 @@ class Normalization(nn.Module):
         self.mean = torch.tensor(mean).view(-1, 1, 1).clone().detach()
         self.std = torch.tensor(std).view(-1, 1, 1).clone().detach()
 
-    def forward(self, img):
+    def forward(self, img: torch.tensor) -> torch.tensor:
         # normalize img
         return (img - self.mean) / self.std
 
 
-def calc_size(image_content, imsize=512):
+def calc_size(image_content: Image, imsize: int=512) -> tuple[int, int]:
     if image_content.width > image_content.height:
         return int(imsize / image_content.width * image_content.height), imsize
     return imsize, int(imsize / image_content.height * image_content.width)
 
 
-def image_loader(image, size_image):
+def image_loader(image: Image, size_image: tuple[int, int]) -> torch.tensor:
     loader = transforms.Compose([
         transforms.Resize(size_image),
         transforms.ToTensor()])
@@ -75,7 +69,7 @@ def image_loader(image, size_image):
     return image.to(device, torch.float)
 
 
-def from_tensor_to_pil_image(tensor):
+def from_tensor_to_pil_image(tensor: torch.tensor) -> Image:
     unloader = transforms.ToPILImage()
     image = tensor.cpu().clone() 
     image = image.squeeze(0)  
@@ -83,34 +77,30 @@ def from_tensor_to_pil_image(tensor):
     return image
 
 
-def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
-                               style_img, content_img,
-                               content_layers=('conv_4'),
-                               style_layers=('conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5')):
+def get_style_model_and_losses(cnn: torch.nn.modules.container.Sequential,
+                                normalization_mean: torch.tensor, 
+                                normalization_std: torch.tensor,
+                               style_img: torch.tensor,
+                               content_img: torch.tensor,
+                               content_layers: str = ('conv_4'),
+                               style_layers: tuple[str, str, str, str, str]=('conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5')):
+
     cnn = copy.deepcopy(cnn)
 
-    # normalization module
     normalization = Normalization(normalization_mean, normalization_std).to(device)
 
-
-    # losses
     content_losses = []
     style_losses = []
 
-    # assuming that cnn is a nn.Sequential, so we make a new nn.Sequential
-    # to put in modules that are supposed to be activated sequentially
     model = nn.Sequential(normalization)
 
-    i = 0  # increment every time we see a conv
+    i = 0
     for layer in cnn.children():
         if isinstance(layer, nn.Conv2d):
             i += 1
             name = 'conv_{}'.format(i)
         elif isinstance(layer, nn.ReLU):
             name = 'relu_{}'.format(i)
-            # The in-place version doesn't play very nicely with the ContentLoss
-            # and StyleLoss we insert below. So we replace with out-of-place
-            # ones here.
             layer = nn.ReLU(inplace=False)
         elif isinstance(layer, nn.MaxPool2d):
             name = 'pool_{}'.format(i)
@@ -122,7 +112,6 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
         model.add_module(name, layer)
 
         if name in content_layers:
-            # add content loss:
             target = model(content_img).detach()
             content_loss = ContentLoss(target)
             model.add_module("content_loss_{}".format(i), content_loss)
@@ -143,14 +132,20 @@ def get_style_model_and_losses(cnn, normalization_mean, normalization_std,
     return model, style_losses, content_losses
 
 
-def get_input_optimizer(input_img):
+def get_input_optimizer(input_img: torch.tensor):
     optimizer = optim.LBFGS([input_img.requires_grad_()], lr=0.3)
     return optimizer
 
 
-def run_style_transfer(cnn, normalization_mean, normalization_std,
-                       content_img, style_img, input_img, num_steps=300,
-                       style_weight=1000000, content_weight=1):
+def run_style_transfer(cnn: torch.nn.modules.container.Sequential,
+                       normalization_mean: torch.tensor,
+                       normalization_std: torch.tensor,
+                       content_img: torch.tensor, 
+                       style_img: torch.tensor,
+                       input_img: torch.tensor, 
+                       num_steps: int=300,
+                       style_weight: int=1000000,
+                       content_weight: int=3):
 
     model, style_losses, content_losses = get_style_model_and_losses(cnn,
         normalization_mean, normalization_std, style_img, content_img)
@@ -160,7 +155,6 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
     while run[0] <= num_steps:
 
         def closure():
-            # correct the values of updated input image
             input_img.data.clamp_(0, 1)
 
             optimizer.zero_grad()
@@ -185,11 +179,10 @@ def run_style_transfer(cnn, normalization_mean, normalization_std,
 
         optimizer.step(closure)
 
-    # a last correction...
     input_img.data.clamp_(0, 1)
 
     return input_img
 
-device = "cpu" # torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 

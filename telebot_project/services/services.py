@@ -1,11 +1,10 @@
 import torch
 import model.transfer_style as ts
-from torchvision import models
 import time
 from config_data.config import Config, load_config
 import requests
 import io
-from PIL import Image, ImageFilter
+from PIL import Image
 import os
 
 
@@ -38,7 +37,7 @@ def add_photo(user_id: int, photo:list, data:dict, is_second: bool) -> None:
 
 
 def inference(content: Image, style: Image) -> Image:
-    imsize = 256 # if torch.cuda.is_available() else 128
+    imsize = 512
     size_image = ts.calc_size(content, imsize=imsize)
 
     content_img = ts.image_loader(content,
@@ -52,10 +51,6 @@ def inference(content: Image, style: Image) -> Image:
     cnn_normalization_mean = torch.tensor([0.485, 0.456, 0.406]).to(ts.device)
     cnn_normalization_std = torch.tensor([0.229, 0.224, 0.225]).to(ts.device)
 
-    # if not os.path.exists("model.pth"):
-    #     cnn = models.vgg19(pretrained=True).features.to(ts.device).eval()
-    #     torch.save(cnn, 'model.pth')
-    # else:
     cnn = torch.load('model/cnn.pth').to(ts.device)
 
     input_img = content_img.clone()
@@ -71,7 +66,8 @@ def inference(content: Image, style: Image) -> Image:
     return ts.from_tensor_to_pil_image(output)
 
 
-def take_pil_image(file_id):
+def take_pil_image(file_id:int) -> Image:
+    type(file_id)
     uri = URI_INFO + file_id
     resp = requests.get(uri)
     img_path = resp.json()['result']['file_path']
