@@ -7,7 +7,7 @@
 
 ## Запуск проекта
 1. Скачать проект 
-`git clone https://github.com/KuBaN658/telebot.git)https://github.com/KuBaN658/telebot.git`
+`git clone https://github.com/KuBaN658/telebot.git`
 2. Перейти в директорию /telebot_project
 3. Создаем docker-образ
    `docker build -t <название образа> .`
