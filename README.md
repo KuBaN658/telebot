@@ -12,4 +12,6 @@
 3. Создаем docker-образ
    `docker build -t <название образа> .`
 4. Создаем docker-контейнер и запускаем его
-  `docker run -e TG_BOT_TOKEN=<токен твоего бота> -e ADMIN_IDS=<твой telegram id> <название образа>`
+  `docker run --gpus all -e TG_BOT_TOKEN=<токен твоего бота> -e ADMIN_IDS=<твой telegram id> <название образа>`
+
+  `--gpus all` - добавляем если хотим использовать видеокарту.
