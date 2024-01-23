@@ -47,6 +47,12 @@ async def process_oil_answer(message: Message, state: FSMContext) -> None:
     await state.set_state(States.oil)
 
 
+@router.message(F.text == LEXICON_RU['pencil_button'], States.yes)
+async def process_oil_answer(message: Message, state: FSMContext) -> None:
+    await message.answer(text=LEXICON_RU['send_photo'])
+    await state.set_state(States.pencil)
+
+
 @router.message(F.text == LEXICON_RU['my_button'], States.yes)
 async def process_oil_answer(message: Message, state: FSMContext) -> None:
     await message.answer(text=LEXICON_RU['send_style'])
@@ -68,6 +74,20 @@ async def send_photo(message: Message, state: FSMContext) -> None:
     image.save(f'static/{message.from_user.id}.png', format='PNG')
     photo = FSInputFile(f"static/{message.from_user.id}.png")
     await message.answer_photo(photo=photo)
+    await message.answer(text=LEXICON_RU['yes'], 
+                         reply_markup=choice_style_kb)
+    await state.set_state(States.yes)
+
+
+@router.message(F.content_type == ContentType.PHOTO, States.pencil)
+async def send_photo(message: Message, state: FSMContext) -> None:
+    await message.answer(text=LEXICON_RU['wait'])
+    image = model(message.photo[-1], 'images/pencil_style.jpg')
+    image.save(f'static/{message.from_user.id}.png', format='PNG')
+    photo = FSInputFile(f"static/{message.from_user.id}.png")
+    await message.answer_photo(photo=photo)
+    await message.answer(text=LEXICON_RU['yes'], 
+                         reply_markup=choice_style_kb)
     await state.set_state(States.yes)
 
 
@@ -79,6 +99,8 @@ async def send_photo(message: Message, state: FSMContext) -> None:
     image.save(f'static/{message.from_user.id}.png', format='PNG')
     photo = FSInputFile(f"static/{message.from_user.id}.png")
     await message.answer_photo(photo=photo)
+    await message.answer(text=LEXICON_RU['yes'], 
+                         reply_markup=choice_style_kb)
     await state.set_state(States.yes)
 
 

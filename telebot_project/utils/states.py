@@ -6,3 +6,4 @@ class States(StatesGroup):
     oil = State()
     my_style = State()
     my_content = State()
+    pencil = State()
