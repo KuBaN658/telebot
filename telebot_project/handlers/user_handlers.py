@@ -7,6 +7,7 @@ from model.transfer_style import device
 from aiogram.fsm.context import FSMContext
 from utils.states import States
 from services.services import model, StyleTransfer
+import os
 
 
 # Инициализируем роутер уровня модуля
@@ -41,6 +42,18 @@ async def process_no_answer(message: Message) -> None:
     await message.answer(text=LEXICON_RU['no'])
 
 
+@router.message(F.text == LEXICON_RU['vangog_button'], States.yes)
+async def process_vangog_answer(message: Message, state: FSMContext) -> None:
+    await message.answer(text=LEXICON_RU['send_photo'])
+    await state.set_state(States.vangog)
+
+
+@router.message(F.text == LEXICON_RU['picasso_button'], States.yes)
+async def process_picasso_answer(message: Message, state: FSMContext) -> None:
+    await message.answer(text=LEXICON_RU['send_photo'])
+    await state.set_state(States.picasso)
+
+
 @router.message(F.text == LEXICON_RU['oil_button'], States.yes)
 async def process_oil_answer(message: Message, state: FSMContext) -> None:
     await message.answer(text=LEXICON_RU['send_photo'])
@@ -67,6 +80,32 @@ async def send_photo(message: Message, state: FSMContext) -> None:
     await state.set_state(States.my_content)
 
 
+@router.message(F.content_type == ContentType.PHOTO, States.vangog)
+async def send_photo(message: Message, state: FSMContext) -> None:
+    await message.answer(text=LEXICON_RU['wait'])
+    image = model(message.photo[-1], 'images/vangog.jpg')
+    image.save(f'static/{message.from_user.id}.png', format='PNG')
+    photo = FSInputFile(f"static/{message.from_user.id}.png")
+    await message.answer_photo(photo=photo)
+    os.remove(f'static/{message.from_user.id}.png')
+    await message.answer(text=LEXICON_RU['yes'], 
+                         reply_markup=choice_style_kb)
+    await state.set_state(States.yes)
+
+
+@router.message(F.content_type == ContentType.PHOTO, States.picasso)
+async def send_photo(message: Message, state: FSMContext) -> None:
+    await message.answer(text=LEXICON_RU['wait'])
+    image = model(message.photo[-1], 'images/picasso.jpg')
+    image.save(f'static/{message.from_user.id}.png', format='PNG')
+    photo = FSInputFile(f"static/{message.from_user.id}.png")
+    await message.answer_photo(photo=photo)
+    os.remove(f'static/{message.from_user.id}.png')
+    await message.answer(text=LEXICON_RU['yes'], 
+                         reply_markup=choice_style_kb)
+    await state.set_state(States.yes)
+
+
 @router.message(F.content_type == ContentType.PHOTO, States.oil)
 async def send_photo(message: Message, state: FSMContext) -> None:
     await message.answer(text=LEXICON_RU['wait'])
@@ -86,6 +125,7 @@ async def send_photo(message: Message, state: FSMContext) -> None:
     image.save(f'static/{message.from_user.id}.png', format='PNG')
     photo = FSInputFile(f"static/{message.from_user.id}.png")
     await message.answer_photo(photo=photo)
+    os.remove(f'static/{message.from_user.id}.png')
     await message.answer(text=LEXICON_RU['yes'], 
                          reply_markup=choice_style_kb)
     await state.set_state(States.yes)
@@ -99,6 +139,8 @@ async def send_photo(message: Message, state: FSMContext) -> None:
     image.save(f'static/{message.from_user.id}.png', format='PNG')
     photo = FSInputFile(f"static/{message.from_user.id}.png")
     await message.answer_photo(photo=photo)
+    os.remove(f'images/{message.from_user.id}.jpg')
+    os.remove(f'static/{message.from_user.id}.png')
     await message.answer(text=LEXICON_RU['yes'], 
                          reply_markup=choice_style_kb)
     await state.set_state(States.yes)

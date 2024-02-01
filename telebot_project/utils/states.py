@@ -7,3 +7,5 @@ class States(StatesGroup):
     my_style = State()
     my_content = State()
     pencil = State()
+    vangog = State()
+    picasso = State()

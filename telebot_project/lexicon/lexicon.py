@@ -5,6 +5,8 @@ LEXICON_RU: dict[str, str] = {
     'no_echo': 'Данный тип апдейтов не поддерживается.',
     'no_button': 'Не хочу!',
     'yes_button': 'Давай!',
+    'vangog_button': 'Картина Вангога',
+    'picasso_button': 'Картина Picasso',
     'oil_button': 'Картина маслом',
     'pencil_button': 'Картина карандашом',
     "my_button": "Свой стиль",
